@@ -2,7 +2,38 @@ from glob import glob
 import pandas as pd
 import pickle
 import os
+import logging
 
+# Configure logging
+#logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+"""
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Machine Learning Pipeline for Testing New Bacterial Isolates for Phage Interaction')
+    
+    # Input arguments
+    parser.add_argument('--bacterial_matched_pangenome', '-i', 
+                    default='./data/5.testing/<test_folder>/2.pangenome/2.panaroo_match',
+                    help='Directory of matched bacterial pangenome files (default: ./data/5.testing/<test_folder>/2.pangenome/2.panaroo_match)')
+
+    parser.add_argument('--phage_pangenome', '-i', 
+                    default='./data/2.phage_pangenome/gene_presence_absence.Rtab',
+                    help='Phage pangenome file (default: ./data/2.phage_pangenome/gene_presence_absence.Rtab)')
+    
+    parser.add_argument('--model', '-i', 
+                    default='1.out/phage/best_xgb_model.pkl',
+                    help='Model file (default: 1.out/phage/best_xgb_model.pkl)')
+    
+    # Output arguments
+    parser.add_argument('--outdir-pangenome', '-o',
+                    default='./data/5.testing/<test_folder>/4.phage_bacteria_pangenome.csv',
+                    help='Output directory for phage-bacteria pangenome used for testing (default: ./data/5.testing/<test_folder>/4.phage_bacteria_pangenome.csv)')
+    
+    parser.add_argument('--outdir_predictions',
+                    default='./data/5.testing/<test_folder>/5.predictions.csv',
+                    help='Output directory for predictions (default: ./data/5.testing/<test_folder>/5.predictions.csv)')
+    return parser.parse_args()
+"""
 
 
 def merge_gene_presence_absence(directory):
@@ -78,7 +109,7 @@ with open('1.out/phage/best_xgb_model.pkl', 'rb') as f:
     best_xgb_model = pickle.load(f)
 
     # Load and align data to model features
-    new_data = pd.read_csv("./data/5.testing/<test_folder>/4.phage_bacteria_pangenome.csv", index_col="Bacteria_Phage")
+    new_data = combined.copy()
     new_data = new_data[best_xgb_model.feature_names_]
 
     # Predict using model
