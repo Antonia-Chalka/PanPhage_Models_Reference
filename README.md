@@ -8,7 +8,7 @@ Set up the following conda environments
 ``` bash 
 conda create -n prokka_env -c conda-forge -c bioconda -c defaults prokka
 
-conda create -n prokka_env -c conda-forge -c bioconda -c defaults python=3.9 'panaroo>=1.3'
+conda create -n panaroo_env -c conda-forge -c bioconda -c defaults python=3.9 'panaroo>=1.3'
 
 conda create -n  pipe_traintest_v2_env -c conda-forge pandas numpy matplotlib scikit-learn=1.5.1 networkx
 ```
@@ -302,7 +302,7 @@ do
 done
 ```
 
-4. Match Pangenome Names: This iw here it gets a bit tricky. We have 2 pangenomes, 1 reference, and one new one that has our isolate. The names of the gene clusters are not identical across our two pangenomes, but the gene content is (with exception of the genes of the bacteria we are testing), therefore what we have to do is look at the gene content of each cluster and match the names that way. I have made a python script `panaroo_merge_process.py` that does as such. See below for examples on how to run it:
+4. Match Pangenome Names: This is where it gets a bit tricky. We have 2 pangenomes, 1 reference, and one new one that has our isolate. The names of the gene clusters are not identical across our two pangenomes, but the gene content is (with exception of the genes of the bacteria we are testing), therefore what we have to do is look at the gene content of each cluster and match the names that way. I have made a python script `panaroo_merge_process.py` that does as such. See below for examples on how to run it:
 
 ``` bash
 conda activate pipe_test_v2_env
