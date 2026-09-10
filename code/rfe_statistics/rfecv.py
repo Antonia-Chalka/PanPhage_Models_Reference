@@ -32,7 +32,7 @@ def main() -> None:
     dtypes[0] = str
 
     print('Loading interaction data...', flush=True)
-    interaction_data = pd.read_csv('3.trainingdata_defaults.tsv', 
+    interaction_data = pd.read_csv('../../training_data.tsv', 
                                    delimiter='\t', dtype=dtypes)
     print('Data loaded', flush=True)
     

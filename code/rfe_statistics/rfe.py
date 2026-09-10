@@ -41,7 +41,7 @@ def main() -> None:
     dtypes[0] = str
 
     print('Loading interaction data...', flush=True)
-    interaction_data = pd.read_csv('data/training_data.tsv', delimiter='\t', dtype=dtypes) #TODO CHANGE & rerun with different sets
+    interaction_data = pd.read_csv('../../data/training_data.tsv', delimiter='\t', dtype=dtypes) #TODO CHANGE & rerun with different sets
     print('Data loaded', flush=True)
 
     # Parameters
