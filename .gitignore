@@ -2,3 +2,4 @@ data/
 .hist/
 .vscode/
 
+.DS_Store
