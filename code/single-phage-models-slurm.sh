@@ -6,12 +6,12 @@
 # of the Monte Carlo Cross Validation of the single phage models.
 #
 #SBATCH --job-name=single-phage-models
-#SBATCH --partition=short
-#SBATCH --time=12:00:00
-#SBATCH --mem=4G
+#SBATCH --partition=long
+#SBATCH --time=1-00:00:00
+#SBATCH --mem=8G
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --array=100
+#SBATCH --cpus-per-task=8
+#SBATCH --array=1-10
 #
 ########################################################################
 
