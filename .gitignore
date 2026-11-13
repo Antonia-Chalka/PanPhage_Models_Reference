@@ -6,3 +6,4 @@ output/
 ._*
 AGENTS.md
 slurm*.out
+*.code-workspace
