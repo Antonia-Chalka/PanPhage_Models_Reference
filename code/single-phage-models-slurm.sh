@@ -7,11 +7,11 @@
 #
 #SBATCH --job-name=single-phage-models
 #SBATCH --partition=long
-#SBATCH --time=1-00:00:00
-#SBATCH --mem=8G
+#SBATCH --time=18:00:00
+#SBATCH --mem=4G
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --array=1-10
+#SBATCH --cpus-per-task=7
+#SBATCH --array=11-31
 #
 ########################################################################
 

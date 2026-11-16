@@ -100,7 +100,7 @@ def main() -> None:
           f'DataFrame memory: {memory_mib:.1f} MiB (excludes parser overhead)')
 
     # Set output directory
-    output_dir = f'../output/{random_state}/'
+    output_dir = f'../output/singlephage/{random_state}/'
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
 
     # Set pipeline configuration
@@ -161,14 +161,12 @@ def main() -> None:
     # Stratify based on whether score is above or below 60
     y_strat = (y >= 60).astype(int)
     # ALD1 only has 1 positive interaction. We must label it as negative or
-    # train_test_split will raise exception
+    # train_test_split will raise exception. In this case, it will be random if
+    # this interaction is in the train or test set
     y_strat['CAN98_ALD1'] = 1
-    # TODO: Es importante que esta interacción caiga siempre en uno de los
-    # sets?
 
     # We need to further stratify by phage so each phage has the same
     # train-test split proportion
-    # TODO: que tan exacta queda la proporción al final?
     indexes = interaction_data.index
     phages = [idx.split('_')[1] for idx in indexes]
     combined_strat = [f"{phage}_{y_strat}" for phage,
@@ -201,27 +199,22 @@ def main() -> None:
         # Create output paths for this phage
         phage_model_path = os.path.join(
             output_dir,
-            "singlephage",
             f"phage_{phage}_model.pkl"
         )
         phage_predictions_path = os.path.join(
             output_dir,
-            "singlephage",
             f"phage_{phage}_predictions.csv"
         )
         phage_feature_importance_path = os.path.join(
             output_dir,
-            "singlephage",
             f"phage_{phage}_feature_importance.csv"
         )
         phage_feature_plot_path = os.path.join(
             output_dir,
-            "singlephage",
             f"phage_{phage}_feature_plot.png"
         )
         phage_bacteria_features_path = os.path.join(
             output_dir,
-            "singlephage",
             f"phage_{phage}_bacteria_features.txt"
         )
 
