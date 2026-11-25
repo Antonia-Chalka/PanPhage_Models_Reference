@@ -8,7 +8,6 @@ This script receives a parsed random seed used for the test-train splitting.
 # Load Libraries
 import pandas as pd
 import numpy as np
-import pickle
 import os
 import sys
 from io import TextIOWrapper
@@ -18,11 +17,50 @@ from sklearn.model_selection import (train_test_split, RepeatedKFold,
 from sklearn.feature_selection import RFECV, RFE
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn import set_config
+from sklearn.utils.validation import check_is_fitted
+from joblib.externals import cloudpickle
 from datetime import datetime
 from argparse import ArgumentParser
 from collections import defaultdict
 from pathlib import Path
 from time import perf_counter
+
+
+FIRST_PHAGE_CODE = 2  # The other predictors are binary (0 or 1).
+
+
+class HistGradientBoostingWithImportances(HistGradientBoostingRegressor):
+    def _check_categorical_features(self, X):
+        if not np.array_equal(self.categorical_features, ["phage"]):
+            return super()._check_categorical_features(X)
+        if isinstance(X, pd.DataFrame):
+            mask = np.asarray(X.columns == "phage")
+        else:
+            # RFE strips names but preserves the order of surviving columns.
+            mask = np.zeros(np.shape(X)[1], dtype=bool)
+            mask[0] = np.any(np.asarray(X)[:, 0] >= FIRST_PHAGE_CODE)
+        return mask if mask.any() else None
+
+    @property
+    def feature_importances_(self) -> np.ndarray:
+        """Return each input feature's share of the total fitted split gain."""
+        check_is_fitted(self, "_predictors")
+        importances = np.zeros(self.n_features_in_)
+        feature_order = np.arange(self.n_features_in_)
+        if self.is_categorical_ is not None:
+            # Histogram trees store categorical columns first.
+            feature_order = np.concatenate((feature_order[self.is_categorical_],
+                                            feature_order[~self.is_categorical_]))
+
+        for (tree,) in self._predictors:
+            nodes = tree.nodes
+            splits = nodes[nodes["is_leaf"] == 0]
+            np.add.at(importances, feature_order[splits["feature_idx"]], splits["gain"])
+
+        total = importances.sum()
+        if total > 0:
+            importances /= total
+        return importances
 
 
 def main() -> None:
@@ -100,13 +138,11 @@ def main() -> None:
           f'DataFrame memory: {memory_mib:.1f} MiB (excludes parser overhead)')
 
     phages = [idx.split('_')[1] for idx in interaction_data.index]
-    interaction_data.insert(0, "phage", pd.Categorical(phages).codes)
-    # TODO: estoy poniendo el fago antes que el score?
-    # Qué pasa cuando separo x e y? creo que tengo que cambiar insert(0... por
-    # insert(1...
+    phage_codes, _ = pd.factorize(pd.Index(phages), sort=True)
+    interaction_data.insert(0, "phage", FIRST_PHAGE_CODE + phage_codes)
 
     # Set output directory
-    output_dir = f'../output/panphage/{random_state}/'
+    output_dir = f'../output/ignorant-panphage/{random_state}/'
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
     # Construct full output paths
     predictions_path = os.path.join(output_dir, 'predictions.csv')
@@ -118,10 +154,9 @@ def main() -> None:
 
     # Set pipeline configuration
     set_config(transform_output="pandas")
-    gradient_boosting = HistGradientBoostingRegressor(max_iter=1000,
-                                                  random_state=random_state,
-                                                  max_bins=31,
-                                                  categorical_features=[0])
+    gradient_boosting = HistGradientBoostingWithImportances(
+        max_iter=1000, random_state=random_state, max_bins=31, categorical_features=["phage"]
+    )
     cv = RepeatedKFold(n_splits=n_splits,
                        n_repeats=n_repeats,
                        random_state=random_state)
@@ -142,22 +177,16 @@ def main() -> None:
     )
     param_grid = {
         # Number of trees in the boosting ensemble
-        'n_estimators': [500, 750, 1000, 1250],
+        'max_iter': [500, 750, 1000, 1250],
         # Depth of the individual trees
         'max_depth': [3, 5, 10, 20],
         # Learning rate for boosting
         'learning_rate': [0.01, 0.05, 0.1, 0.2],
-        # Fraction of samples used for fitting each tree
-        'subsample': [0.8, 0.9, 1.0],
-        # Minimum number of samples required to split a node
-        'min_samples_split': [2, 5, 10],
         # Minimum number of samples required in each leaf
         'min_samples_leaf': [1, 2, 4]
     }
     tuning = RandomizedSearchCV(
-        estimator=HistGradientBoostingRegressor(random_state=random_state,
-                                                max_bins=31,
-                                                categorical_features=[0]),
+        estimator=gradient_boosting,
         param_distributions=param_grid,
         cv=cv,
         scoring='neg_root_mean_squared_error',
@@ -205,12 +234,13 @@ def main() -> None:
 
     # ---- 3. Model tuning ----
     tuning.fit(X_train_s2, y_train)
-    best_model = cast(GradientBoostingRegressor,
+    best_model = cast(HistGradientBoostingWithImportances,
                       tuning.best_estimator_)
 
     # Save the best model
     with open(model_path, 'wb') as f:
-        pickle.dump(best_model, f)
+        # Include the script-local class so other programs can use pickle.load.
+        cloudpickle.dump(best_model, f)
 
     # ---- 4. Predict on test data ----
     y_pred = best_model.predict(X_test_s2)
