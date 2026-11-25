@@ -240,7 +240,7 @@ for i in iterations:
 
 fig, ax = plt.subplots(1, 3, figsize=(10, 4), sharey=True)
 
-ax[1].set_title('32 repeats (single-phage, PanPhage, & null)')
+ax[1].set_title('128 repeats (single-phage, PanPhage, & null)')
 
 ax[0].set_xlabel('RMSE')
 ax[1].set_xlabel('F1')
