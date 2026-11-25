@@ -1,6 +1,12 @@
-#data/
 .hist/
 .vscode/
+.venv/
+*.DS_Store
+output/
+._*
+AGENTS.md
+slurm*.out
+*.code-workspace
 data/1.bacterial_annotations/*/*.err
 data/1.bacterial_annotations/*/*.faa
 data/1.bacterial_annotations/*/*.ffn
